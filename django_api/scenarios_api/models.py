@@ -9,6 +9,8 @@ class TestCase(models.Model):
     title = models.CharField(max_length=255)
     idea = models.CharField(max_length=255)
     expected_result = models.CharField(max_length=255)
+    def __repr__(self) -> str:
+        return f"TestCase(id={self.id}, title={self.title})"
 
 class TestStep(models.Model):
     test_case = models.ForeignKey(TestCase, on_delete=models.CASCADE)
