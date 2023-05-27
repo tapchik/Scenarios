@@ -19,7 +19,8 @@ class ViewAllTestCases(View):
             if len(query) > 0:
                 testcase = query[0]
                 item = {}
-                item['code'] = testcase.workitem.code
+                item['id'] = testcase.workitem.id
+                item['ident'] = testcase.ident
                 item['title'] = testcase.title
                 item['version'] = testcase.version
                 testcases.append(item)
@@ -29,23 +30,18 @@ class ViewAllTestCases(View):
         print(response)
         return JsonResponse(response, status=201)
 
-def NumberOfTestCases(item: str) -> int:
-    test_cases = TestCase.objects.filter(item=item)
-    number = len(test_cases)
-    return number
-
 @method_decorator(csrf_exempt, name='dispatch')
 class ViewTestCase(View):
 
     def get(self, request):
 
-        if 'code' not in request.GET:
-            response = {"message": "Error, bring parameter 'code'"}
+        if 'id' not in request.GET:
+            response = {"message": "Error, bring parameter 'id'"}
             return JsonResponse(response, status=500)
-        code = request.GET['code']
-        code = int(code)
+        id = request.GET['id']
+        id = int(id)
         
-        wi = WorkItem.objects.get(code=code)
+        wi = WorkItem.objects.get(id=id)
         testcase = TestCase.objects.filter(workitem=wi).order_by('-version')[0]
         steps_object = TestStep.objects.filter(test_case=testcase).order_by('step')
 
@@ -56,17 +52,59 @@ class ViewTestCase(View):
             step['action'] = row.action
             step['expected_result'] = row.expected_result
             steps.append(step)
-        
-        f = [1, 2, 3]
 
         response = {
             'testcase': {
-                'code': code,
+                'id': id,
+                'ident': testcase.ident,
                 'version': testcase.version,
                 'title': testcase.title,
                 'idea': testcase.idea,
-                'expected_result': testcase.expected_result
+                'expected_result': testcase.expected_result,
+                'steps': steps
             },
-            'steps': steps
+        }
+        return JsonResponse(response, status=201)
+
+class ViewAllTestSuites(View):
+    def get(self, request):
+        wis = WorkItem.objects.filter(type='TS')
+        suites = []
+        for wi in wis:
+            query = TestSuite.objects.filter(workitem=wi).order_by('workitem')
+            if len(query) > 0:
+                suite = query[0]
+                item = {}
+                item['id'] = suite.workitem.id
+                item['title'] = suite.title
+                item['description'] = suite.description
+                suites.append(item)
+        
+        response = {}
+        response['testsuites'] = suites
+        print(response)
+        return JsonResponse(response, status=201)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ViewTestSuite(View):
+
+    def get(self, request):
+
+        if 'id' not in request.GET:
+            response = {"message": "Error, bring parameter 'id'"}
+            return JsonResponse(response, status=500)
+        id = request.GET['id']
+        id = int(id)
+        
+        wi = WorkItem.objects.get(id=id)
+        suite = TestSuite.objects.get(workitem=wi)
+
+        response = {
+            'testsuite': {
+                'id': suite.workitem.id,
+                'ident': suite.workitem.ident,
+                'title': suite.title,
+                'description': suite.description,
+            }
         }
         return JsonResponse(response, status=201)

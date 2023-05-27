@@ -8,7 +8,7 @@ class WorkItem(models.Model):
     TESTCASE = "TC"
     WORK_ITEMS_CHOICES = [(TESTSUITE, "TestSuite"), (TESTCASE, "TestCase")]
 
-    code = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     type = models.CharField(max_length=2, choices=WORK_ITEMS_CHOICES)
 
     class Meta: 
@@ -17,7 +17,7 @@ class WorkItem(models.Model):
         return f"WorkItem(ident={self.ident})"
     @property
     def ident(self) -> str:
-        return f"{self.type}{str(self.code).zfill(6)}"
+        return f"{self.type}{str(self.id).zfill(6)}"
 
 class TestSuite(models.Model):
     workitem = models.ForeignKey(WorkItem, on_delete=models.CASCADE)
@@ -25,6 +25,9 @@ class TestSuite(models.Model):
     description = models.CharField(max_length=255, blank=True)
     class Meta: 
         verbose_name_plural = "TestSuites"
+        constraints = [
+            models.UniqueConstraint(fields=['workitem'], name='unique_testsuite_workitem_version'),
+        ]
     def __str__(self) -> str:
         return f"{self.workitem.ident}: {self.title}"
 
@@ -53,5 +56,8 @@ class TestStep(models.Model):
     expected_result = models.CharField(max_length=255, blank=True)
     class Meta: 
         verbose_name_plural = "TestSteps"
+        constraints = [
+            models.UniqueConstraint(fields=['test_case', 'step'], name='unique_teststep_testcase_step'),
+        ]
     def __str__(self) -> str:
         return f"{self.test_case.ident} has step {self.step}"
