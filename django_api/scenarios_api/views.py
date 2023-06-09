@@ -4,10 +4,43 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
-from .models import WorkItem, TestSuite, TestCase, TestStep
+from .models import TestPlan, TestPlanContent, TestSuite, TestCase, TestStep
 from . import queries #import RetrieveAllTestCases
 
 # Create your views here.
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ViewAllTestPlans(View):
+    def get(self, request):
+        plans = TestPlan.objects.all().order_by('-created')
+        for plan in plans:
+            item = {
+                'id': plan.id,
+                'title': plan.title,
+                }
+            contents = TestPlanContent.objects.filter(plan=plan).order_by('step')
+            suites = {}
+            for content in contents:
+                suite = queries.GetTestSuite(content.abstract_suite.id, content.version)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ViewTestPlan(View):
+    def get(self, request):
+        # check for request validity
+        if 'id' not in request.GET:
+            response = {"message": "Error, bring parameter 'id'"}
+            return JsonResponse(response, status=400)
+        # forming response
+        plan_id = request.GET['id']
+        plan_json = queries.RetrieveTestPlan(plan_id)
+        response = {'testplan': plan_json}
+        response['testplan']['testsuites'] = []
+        plan = TestPlan.objects.get(id=plan_id)
+        contents = TestPlanContent.objects.filter(plan=plan)
+        for content in contents:
+            suite = queries.RetrieveTestSuite(content.step, content.abstract_suite.id, content.version)
+            response['testplan']['testsuites'].append(suite)
+        return JsonResponse(response, status=200)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ViewAllTestCases(View): 
@@ -68,6 +101,7 @@ class ViewCreateTestCase(View):
 
 class ViewAllTestSuites(View):
     def get(self, request):
+        return None
         work_items = WorkItem.objects.filter(type='TS')
         suites = []
         for wi in work_items:
@@ -93,6 +127,7 @@ class ViewTestSuite(View):
         # extract parameners from request
         id = int(request.GET['id'])
         
+        return None
         wi = WorkItem.objects.get(id=id)
         suite = TestSuite.objects.get(workitem=wi)
 

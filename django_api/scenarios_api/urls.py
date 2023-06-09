@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import ViewAllTestSuites, ViewTestSuite, ViewAllTestCases, ViewTestCase, ViewUpdateTestCase, ViewCreateTestCase
+from .views import ViewTestPlan, ViewAllTestSuites, ViewTestSuite, ViewAllTestCases, ViewTestCase, ViewUpdateTestCase, ViewCreateTestCase
 
 urlpatterns = [
+    path('testplan', ViewTestPlan.as_view()),
     path('testsuites', ViewAllTestSuites.as_view()),
     path('testsuite', ViewTestSuite.as_view()), 
     path('testcases', ViewAllTestCases.as_view()),
