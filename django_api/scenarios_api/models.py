@@ -68,6 +68,7 @@ class TestCase(models.Model):
     step = models.PositiveSmallIntegerField()
     title = models.CharField(max_length=255)
     idea = models.CharField(max_length=255, blank=True)
+    actionable_steps = models.TextField(blank=True)
     expected_result = models.CharField(max_length=255, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     class Meta: 

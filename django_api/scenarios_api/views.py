@@ -10,18 +10,20 @@ from . import queries #import RetrieveAllTestCases
 # Create your views here.
 
 @method_decorator(csrf_exempt, name='dispatch')
-class ViewAllTestPlans(View):
+class ViewTestPlans(View):
     def get(self, request):
         plans = TestPlan.objects.all().order_by('-created')
+        response = {'testplans': []}
         for plan in plans:
-            item = {
-                'id': plan.id,
-                'title': plan.title,
-                }
-            contents = TestPlanContent.objects.filter(plan=plan).order_by('step')
-            suites = {}
-            for content in contents:
-                suite = queries.GetTestSuite(content.abstract_suite.id, content.version)
+            item = queries.RetrieveTestPlan(plan.id)
+            item['test_suites_finished'] = 44
+            item['test_suites_total'] = 88
+            response['testplans'] += [item]
+            #contents = TestPlanContent.objects.filter(plan=plan).order_by('step')
+            #suites = {}
+            #for content in contents:
+            #    suite = queries.GetTestSuite(content.abstract_suite.id, content.version)
+        return JsonResponse(response, status=200)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ViewTestPlan(View):
@@ -32,14 +34,10 @@ class ViewTestPlan(View):
             return JsonResponse(response, status=400)
         # forming response
         plan_id = request.GET['id']
-        plan_json = queries.RetrieveTestPlan(plan_id)
-        response = {'testplan': plan_json}
-        response['testplan']['testsuites'] = []
-        plan = TestPlan.objects.get(id=plan_id)
-        contents = TestPlanContent.objects.filter(plan=plan)
-        for content in contents:
-            suite = queries.RetrieveTestSuite(content.step, content.abstract_suite.id, content.version)
-            response['testplan']['testsuites'].append(suite)
+        plan = queries.RetrieveTestPlan(plan_id)
+        response = { 'testplan': plan }
+        testsuites = queries.RetrieveTestSuitesInTestPlan(plan_id)
+        response['testplan']['testsuites'] = testsuites
         return JsonResponse(response, status=200)
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -53,14 +51,17 @@ class ViewAllTestCases(View):
 class ViewTestCase(View):
     def get(self, request):
         # check for request validity
-        if 'id' not in request.GET:
-            response = {"message": "Error, bring parameter 'id'"}
+        if 'suite_id' not in request.GET:
+            response = {"message": "Error, bring parameter 'suite_id'"}
+            return JsonResponse(response, status=400)
+        if 'step' not in request.GET:
+            response = {"message": "Error, bring parameter 'step'"}
             return JsonResponse(response, status=400)
         # extract parameters from request
-        id = int(request.GET['id'])
-        ver = int(request.GET['v']) if 'v' in request.GET else None
+        suite_id = int(request.GET['suite_id'])
+        step = int(request.GET['step'])
         # form and return testcase
-        testcase = queries.RetrieveTestCase(id, ver)
+        testcase = queries.RetrieveTestCase(suite_id, step)
         response = {'testcase': testcase}
         return JsonResponse(response, status=200)
 
@@ -118,25 +119,19 @@ class ViewAllTestSuites(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ViewTestSuite(View):
-
     def get(self, request):
         # check for request validity
         if 'id' not in request.GET:
-            response = {"message": "Error, bring parameter 'id'"}
+            response = {"message": "Error, bring parameter 'suite_id'"}
+            return JsonResponse(response, status=400)
+        if 'ver' not in request.GET:
+            response = {"message": "Error, bring parameter 'ver'"}
             return JsonResponse(response, status=400)
         # extract parameners from request
-        id = int(request.GET['id'])
-        
-        return None
-        wi = WorkItem.objects.get(id=id)
-        suite = TestSuite.objects.get(workitem=wi)
+        suite_id = int(request.GET['id'])
+        ver = request.GET['ver'] if request.GET['ver'] != 'Fresh' else None
+        suite = queries.RetrieveTestSuite(suite_id, ver)
+        tcases = queries.RetrieveTestCases(suite_id)
 
-        response = {
-            'testsuite': {
-                'id': suite.workitem.id,
-                'ident': suite.workitem.ident,
-                'title': suite.title,
-                'description': suite.description,
-            }
-        }
+        response = {'testsuite': suite}
         return JsonResponse(response, status=200)

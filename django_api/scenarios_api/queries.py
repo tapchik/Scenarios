@@ -19,8 +19,7 @@ def RetrieveAllTestCases() -> dict:
             testcases.append(item)
     return testcases
 
-def RetrieveTestCase(id: str, ver: int = None) -> dict:
-    return None
+def RetrieveTestCase(suite_id: int, step: int) -> dict:
     wi = WorkItem.objects.get(id=id)
     match ver:
         case None:
@@ -105,6 +104,15 @@ def TestCaseExists(id: str) -> bool:
         return True
     return False
 
+def AbsentParams(given_params: list, expected_params: list) -> list:
+    """
+    ABANDONED. Returns a list of absent expected params among given params. 
+    """
+    absent = []
+    for param in expected_params:
+        if param not in given_params:
+            pass
+
 def RetrieveTestPlan(plan_id: int) -> dict:
     """
     Returns information about a test plan with specified id in a form of dictionary. 
@@ -118,14 +126,26 @@ def RetrieveTestPlan(plan_id: int) -> dict:
     }
     return item
 
-def GetTestSuitesInPlan(plan_id: int) -> list[TestSuite]:
+def RetrieveTestSuitesInTestPlan(plan_id: int) -> dict:
     plan = TestPlan.objects.get(id=plan_id)
     contents = TestPlanContent.objects.filter(plan=plan).order_by('step')
-    suites = []
+    result = []
     for content in contents:
         suite = _GetTestSuite(content.abstract_suite.id, content.version)
-        suites.append(suite)
-    return suites
+        test_cases_finished = 0 # TODO: write a function to calculated finished cases
+        test_cases_total = TestCase.objects.filter(suite=suite).count()
+        item = {
+            'step': content.step,
+            'suite_ident': suite.ident+' (Fresh)' if content.version == None else suite.ident+f' (ver {content.version})',
+            'suite_id': suite.abstract.id,
+            'version': content.version if content.version != None else 'Fresh',
+            'title': suite.title,
+            'description': suite.description,
+            'test_cases_finished': test_cases_finished,
+            'test_cases_total': test_cases_total,
+        }
+        result.append(item)
+    return result
 
 def _GetTestSuite(suite_id: int, ver: int = None) -> TestSuite:
     """
@@ -139,16 +159,37 @@ def _GetTestSuite(suite_id: int, ver: int = None) -> TestSuite:
             suite = TestSuite.objects.get(abstract=abstract_suite, version=ver)
     return suite
 
-def RetrieveTestSuite(step: int, suite_id: int, ver: int = None) -> dict:
+def RetrieveTestSuite(suite_id: int, ver: int = None) -> dict:
+    """
+    Returns information about specified version of a test_suite or the latest version. 
+    """
     suite = _GetTestSuite(suite_id, ver)
+    testcases = RetrieveTestCases(suite_id, ver)
     item = {
-        'step': step, 
         'suite_ident': suite.ident if ver == None else suite.ident+f'_v{suite.version}',
         'suite_id': suite_id,
         'version': suite.version if ver != None else 'Fresh',
         'title': suite.title,
         'description': suite.description,
         'test_cases_finished': 44,
-        'test_cases_total': 88,
+        'test_cases_total': len(testcases),
+        'testcases': testcases,
     }
     return item
+
+def RetrieveTestCases(suite_id: int, ver: int = None) -> dict:
+    """
+    Returns test cases withing specified suite. 
+    """
+    suite = _GetTestSuite(suite_id, ver)
+    tcases = TestCase.objects.filter(suite=suite).order_by('step')
+    result = []
+    for tcase in tcases:
+        item = {
+            'step': tcase.step,
+            'title': tcase.title,
+            'idea': tcase.idea,
+            'expected_result': tcase.expected_result,
+        }
+        result.append(item)
+    return result

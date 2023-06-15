@@ -1,0 +1,9 @@
+div.plan-brief-container {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    background-color: #f1f1f1;
+    margin: 10px;
+    line-height: 55px;
+}
