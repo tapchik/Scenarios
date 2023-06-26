@@ -23,8 +23,10 @@ class Suite extends React.Component {
     componentDidMount() {
         let suite_id = this.extractParamFromURL('id')
         let ver = this.extractParamFromURL('ver')
+        let plan_id = this.extractParamFromURL('plan_id')
         document.title = this.state.testplan.title
         this.fetchTestSuite(suite_id, ver)
+        this.setState({'parent_plan_id': plan_id})
     }
 
     extractParamFromURL(param) {
@@ -48,7 +50,17 @@ class Suite extends React.Component {
 
             <Container>
 
-                <h1>{this.state.testsuite.suite_ident}: {this.state.testsuite.title}</h1>
+                <div className='header'>
+                  <p>{this.state.testsuite.suite_ident}</p>
+                  <h1 style={{'fontSize': '30px'}}>{this.state.testsuite.title}</h1>
+                </div>
+
+                <div className='navigation'>
+                  <Button href={"/plan"+"?id="+this.state.parent_plan_id}>〈 Suites</Button>
+                  <span style={{flexGrow: '2'}}></span>
+                  <Button variant='danger'>⌫ Delete case</Button>
+                  <Button variant='success'>+ Add case</Button>
+                </div>
 
                 <div>
                   {this.state.testsuite.testcases.map((testcase) => (

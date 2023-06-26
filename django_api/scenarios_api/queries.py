@@ -19,25 +19,19 @@ def RetrieveAllTestCases() -> dict:
             testcases.append(item)
     return testcases
 
-def RetrieveTestCase(suite_id: int, step: int) -> dict:
-    wi = WorkItem.objects.get(id=id)
-    match ver:
-        case None:
-            testcase = TestCase.objects.filter(workitem=wi).order_by('-version')[0]
-        case _:
-            testcase = TestCase.objects.get(workitem=wi, version=ver)
-    steps = _GetTestSteps(testcase)
-
-    testcase = {
-        'id': id,
-        'ident': testcase.ident,
-        'version': testcase.version,
+def RetrieveTestCase(suite_id: int, ver: int, step: int) -> dict:
+    ver = 'Fresh' if ver == None else ver
+    suite = _GetTestSuite(suite_id, ver)
+    testcase = TestCase.objects.get(suite=suite, step=step)
+    item = {
+        'step': step,
         'title': testcase.title,
         'idea': testcase.idea,
+        'finished': testcase.finished,
+        'actionable_steps': testcase.actionable_steps,
         'expected_result': testcase.expected_result,
-        'steps': steps
     }
-    return testcase
+    return item
 
 def CreateNewVersionOfTestCase(body: dict) -> TestCase:
     return None
@@ -122,7 +116,7 @@ def RetrieveTestPlan(plan_id: int) -> dict:
         'plan_ident': plan.ident,
         'plan_id': plan.id,
         'title': plan.title,
-        'date_created': plan.created,
+        'date_created': plan.created.strftime("%d %b %Y, %H:%M:%S"),
     }
     return item
 
@@ -132,7 +126,7 @@ def RetrieveTestSuitesInTestPlan(plan_id: int) -> dict:
     result = []
     for content in contents:
         suite = _GetTestSuite(content.abstract_suite.id, content.version)
-        test_cases_finished = 0 # TODO: write a function to calculated finished cases
+        test_cases_finished = TestCase.objects.filter(suite=suite, finished=True).count()
         test_cases_total = TestCase.objects.filter(suite=suite).count()
         item = {
             'step': content.step,
@@ -166,12 +160,12 @@ def RetrieveTestSuite(suite_id: int, ver: int = None) -> dict:
     suite = _GetTestSuite(suite_id, ver)
     testcases = RetrieveTestCases(suite_id, ver)
     item = {
-        'suite_ident': suite.ident if ver == None else suite.ident+f'_v{suite.version}',
+        'suite_ident': suite.ident+" (Fresh)" if ver == None else suite.ident+f'_v{suite.version}',
         'suite_id': suite_id,
         'version': suite.version if ver != None else 'Fresh',
         'title': suite.title,
         'description': suite.description,
-        'test_cases_finished': 44,
+        'test_cases_finished': len(list(filter(lambda x: x['finished'] == 'Finished', testcases))),
         'test_cases_total': len(testcases),
         'testcases': testcases,
     }
@@ -190,6 +184,8 @@ def RetrieveTestCases(suite_id: int, ver: int = None) -> dict:
             'title': tcase.title,
             'idea': tcase.idea,
             'expected_result': tcase.expected_result,
+            'n_actionable_steps': len(tcase.actionable_steps.splitlines()),
+            'finished': 'Finished' if tcase.finished == True else 'Pending',
         }
         result.append(item)
     return result

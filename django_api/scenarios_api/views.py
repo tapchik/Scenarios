@@ -16,13 +16,10 @@ class ViewTestPlans(View):
         response = {'testplans': []}
         for plan in plans:
             item = queries.RetrieveTestPlan(plan.id)
-            item['test_suites_finished'] = 44
-            item['test_suites_total'] = 88
+            suites = queries.RetrieveTestSuitesInTestPlan(plan.id)
+            item['test_suites_finished'] = 0 # TODO
+            item['test_suites_total'] = len(suites)
             response['testplans'] += [item]
-            #contents = TestPlanContent.objects.filter(plan=plan).order_by('step')
-            #suites = {}
-            #for content in contents:
-            #    suite = queries.GetTestSuite(content.abstract_suite.id, content.version)
         return JsonResponse(response, status=200)
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -54,14 +51,18 @@ class ViewTestCase(View):
         if 'suite_id' not in request.GET:
             response = {"message": "Error, bring parameter 'suite_id'"}
             return JsonResponse(response, status=400)
+        if 'ver' not in request.GET:
+            response = {"message": "Error, bring parameter 'ver'"}
+            return JsonResponse(response, status=400)
         if 'step' not in request.GET:
             response = {"message": "Error, bring parameter 'step'"}
             return JsonResponse(response, status=400)
         # extract parameters from request
         suite_id = int(request.GET['suite_id'])
+        ver = int(request.GET['ver'])
         step = int(request.GET['step'])
         # form and return testcase
-        testcase = queries.RetrieveTestCase(suite_id, step)
+        testcase = queries.RetrieveTestCase(suite_id, ver, step)
         response = {'testcase': testcase}
         return JsonResponse(response, status=200)
 
@@ -80,6 +81,34 @@ class ViewUpdateTestCase(View):
         new_testcase = queries.CreateNewVersionOfTestCase(body)
         number_of_steps = TestStep.objects.filter(test_case=new_testcase).count()
         response = {'message': f"Ok, new version of TestCase has been created: {new_testcase.ident} with {number_of_steps} steps"}
+        return JsonResponse(response, status=201)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ViewTestCaseStatus(View):
+    def put(self, request):
+        # check for request validity
+        if 'suite_id' not in request.GET:
+            response = {"message": "Error, bring parameter 'suite_id'"}
+            return JsonResponse(response, status=400)
+        if 'ver' not in request.GET:
+            response = {"message": "Error, bring parameter 'ver'"}
+            return JsonResponse(response, status=400)
+        if 'step' not in request.GET:
+            response = {"message": "Error, bring parameter 'step'"}
+            return JsonResponse(response, status=400)
+        if 'finished' not in request.GET:
+            response = {"message": "Error, bring parameter 'finished'"}
+            return JsonResponse(response, status=400)
+        # extract parameters from request
+        suite_id = int(request.GET['suite_id'])
+        ver = int(request.GET['ver']) if request.GET['ver'] != 'Fresh' else None
+        step = int(request.GET['step'])
+        # changing test case status
+        suite = queries._GetTestSuite(suite_id, ver)
+        tcase = TestCase.objects.get(suite=suite, step=step)
+        tcase.finished = request.GET['finished']
+        tcase.save()
+        response = {'message': f"Ok, test case status has been changed. "}
         return JsonResponse(response, status=201)
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -131,7 +160,6 @@ class ViewTestSuite(View):
         suite_id = int(request.GET['id'])
         ver = request.GET['ver'] if request.GET['ver'] != 'Fresh' else None
         suite = queries.RetrieveTestSuite(suite_id, ver)
-        tcases = queries.RetrieveTestCases(suite_id)
-
+        tcases = queries.RetrieveTestCases(suite_id, ver)
         response = {'testsuite': suite}
         return JsonResponse(response, status=200)

@@ -2,15 +2,6 @@ from django.db import models
 
 # Create your models here.
 
-class User(models.Model):
-    login = models.CharField(max_length=50, unique=True)
-    password = models.CharField(max_length=30)
-    can_edit = models.BooleanField(default=True)
-    can_create = models.BooleanField(default=True)
-    can_progress = models.BooleanField(default=True)
-    def __str__(self) -> str:
-        return f"User(login=\'{self.login}\')"
-
 class AbstractTestSuite(models.Model):
     """
     Multiple versions of test suites with the same id can exist. 
@@ -68,6 +59,7 @@ class TestCase(models.Model):
     step = models.PositiveSmallIntegerField()
     title = models.CharField(max_length=255)
     idea = models.CharField(max_length=255, blank=True)
+    finished = models.BooleanField()
     actionable_steps = models.TextField(blank=True)
     expected_result = models.CharField(max_length=255, blank=True)
     created = models.DateTimeField(auto_now_add=True)

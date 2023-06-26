@@ -1,12 +1,12 @@
 import React from 'react';
-//import logo from './logo.svg';
-//import './App.css';
-import { useLocation } from "react-router-dom";
 
 import 'bootstrap/dist/css/bootstrap.css';
 import Container from 'react-bootstrap/Container';
+import Button from 'react-bootstrap/Button';
 
 import TestSuiteBrief from '../elements/TestSuiteBrief';
+
+import '../css/common.css';
 
 class Plan extends React.Component {
 
@@ -51,9 +51,19 @@ class Plan extends React.Component {
         return (
 
             <Container>
-            
-                <h1>{this.state.testplan.plan_ident}: {this.state.testplan.title}</h1>
-                    
+
+                <div className='header'>
+                  <p>{this.state.testplan.plan_ident}</p>
+                  <h1 style={{'fontSize': '30px'}}>{this.state.testplan.title}</h1>
+                </div>
+
+                <div className='navigation'>
+                  <Button href="/plans">〈 All plans</Button>
+                  <span style={{flexGrow: '2'}}></span>
+                  <Button variant='danger'>⌫ Delete suite</Button>
+                  <Button variant='success'>+ Add suite</Button>
+                </div>
+
                 <div>
                   {this.state.testplan.testsuites.map((testsuite) => (
                         <TestSuiteBrief plan_id={this.state.testplan.plan_id} testsuite={testsuite} key={testsuite.suite_ident} />

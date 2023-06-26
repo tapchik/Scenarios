@@ -10,6 +10,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 
+import '../css/common.css';
 
 class Plans extends React.Component {
 
@@ -40,7 +41,15 @@ class Plans extends React.Component {
 
             <Container>
 
-                <h1>List of recent Test Plans</h1>
+                <div className='header'>
+                    <h1 style={{'fontSize': '30px'}}>List of recent Test Plans</h1>
+                </div>
+
+                <div className='navigation'>
+                    <span style={{flexGrow: '2'}}></span>
+                    <Button variant='danger'>⌫ Delete plan</Button>
+                    <Button variant='success'>+ Add plan</Button>
+                </div>
                     
                 <div>
                   {this.state.testplans.map((testplan) => (

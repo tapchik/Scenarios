@@ -1,7 +1,7 @@
 import React from 'react';
 
 import 'bootstrap/dist/css/bootstrap.css';
-import ProgressBar from 'react-bootstrap/ProgressBar'; 
+import ProgressBar from 'react-bootstrap/ProgressBar';
 import Button from 'react-bootstrap/Button';
 
 import '../css/common.css';
@@ -28,7 +28,7 @@ function TestSuiteBrief(props) {
                 <p style={{fontSize: '12px'}}>{props.testsuite.description}</p>
             </div>
             <div className='suite-brief-status'>
-                <Button variant="primary" onClick={() => window.location.assign('/suite?id='+props.testsuite.suite_id + '&ver='+props.testsuite.version + '&parent_plan_id='+props.parent_plan_id)}>Visit</Button>
+                <Button variant="primary" href={'/suite?id='+props.testsuite.suite_id + '&ver='+props.testsuite.version + '&plan_id='+props.plan_id}>Visit</Button>
                 <ProgressBar style={{backgroundColor: 'rgb(190 198 195)'}} now={Percentage(props.testsuite.test_cases_finished, props.testsuite.test_cases_total)} />
                 <p style={{fontSize: '12px', color: '#74857f'}}>
                     {props.testsuite.test_cases_finished}/{props.testsuite.test_cases_total} cases passed
