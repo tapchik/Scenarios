@@ -1,0 +1,17 @@
+p {
+    margin-bottom: 0pt;
+}
+
+div.header {
+    margin-top: 15px;
+    margin-bottom: 30px;
+}
+
+div.navigation {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    gap: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
