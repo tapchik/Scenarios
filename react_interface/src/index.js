@@ -5,6 +5,7 @@ import App from './App';
 import Plan from './Pages/Plan';
 import Plans from './Pages/Plans';
 import Suite from './Pages/Suite';
+import Case from './Pages/Case';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
@@ -17,6 +18,7 @@ root.render(
         <Route path="/plans" element={<Plans />}/>
         <Route path="/plan" element={<Plan />}/>
         <Route path="/suite" element={<Suite />}/>
+        <Route path="/case" element={<Case />}/>
       </Routes>
     </Router>
 

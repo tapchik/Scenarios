@@ -1,10 +1,6 @@
 import React from 'react';
-//import logo from './logo.svg';
-//import './App.css';
-import { Line, Circle } from 'rc-progress';
 
 import TestPlanBrief from '../elements/TestPlanBrief';
-import CircularProgress from '../elements/CircularProgress';
 
 import 'bootstrap/dist/css/bootstrap.css';
 import Container from 'react-bootstrap/Container';
